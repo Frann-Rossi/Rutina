@@ -1,0 +1,27 @@
+---
+import SeriesTracker from './SeriesTracker.astro';
+
+interface Props {
+    exercise: {
+        id: string;
+        name: string;
+        series: boolean[];
+    };
+    dayIndex: number;
+}
+const { exercise, dayIndex } = Astro.props;
+---
+<div class="exercise-item group/item border-b border-white/5 py-4 last:border-0" data-id={exercise.id} data-day-index={dayIndex}>
+    <div class="flex items-center justify-between gap-4">
+        <input 
+            type="text" 
+            value={exercise.name} 
+            placeholder="Nombre del ejercicio..." 
+            class="input-ghost text-lg font-medium exercise-name-input"
+        />
+        <button class="delete-exercise opacity-0 group-hover/item:opacity-100 text-gray-600 hover:text-red-500 transition-all p-1">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18m-2 0v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6m3 0V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+        </button>
+    </div>
+    <SeriesTracker exerciseId={exercise.id} dayIndex={dayIndex} series={exercise.series} />
+</div>

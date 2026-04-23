@@ -1,0 +1,31 @@
+---
+interface Props {
+    exerciseId: string;
+    dayIndex: number;
+    series: boolean[];
+}
+const { exerciseId, dayIndex, series } = Astro.props;
+---
+<div class="flex flex-wrap items-center gap-2 mt-2 series-container" data-exercise-id={exerciseId} data-day-index={dayIndex}>
+    {series.map((completed, index) => (
+        <label class="relative cursor-pointer group">
+            <input 
+                type="checkbox" 
+                checked={completed} 
+                class="checkbox-custom serie-checkbox" 
+                data-index={index}
+            />
+            <span class="sr-only">Serie {index + 1}</span>
+        </label>
+    ))}
+    <div class="flex gap-1 ml-2">
+        <button class="add-serie text-gray-500 hover:text-primary transition-colors text-xl font-bold" title="Agregar serie">+</button>
+        <button class="remove-serie text-gray-500 hover:text-red-400 transition-colors text-xl font-bold" title="Quitar serie">-</button>
+        <button class="reset-exercise-progress text-gray-500 hover:text-yellow-400 transition-colors ml-1" title="Reiniciar progreso de este ejercicio">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+        </button>
+    </div>
+    <span class="text-xs text-gray-500 ml-auto font-medium progress-text">
+        {series.filter(s => s).length}/{series.length}
+    </span>
+</div>

@@ -1,0 +1,45 @@
+---
+import ExerciseItem from './ExerciseItem.astro';
+
+interface Props {
+    routineId: string;
+    name: string;
+    index: number;
+    exercises: any[];
+}
+const { routineId, name, index, exercises } = Astro.props;
+---
+<div class="card animate-fade-in flex flex-col gap-2 h-full routine-slot" data-id={routineId} data-index={index}>
+    <div class="flex justify-between items-center mb-4 gap-2">
+        <input 
+            type="text" 
+            value={name} 
+            placeholder="Nombre de la rutina..." 
+            class="input-ghost text-xl font-bold text-gray-200 routine-name-input"
+        />
+        <div class="flex gap-2 shrink-0">
+            <button class="reset-day-progress p-1 text-gray-500 hover:text-yellow-400 transition-colors" title="Reiniciar progreso del día">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+            </button>
+            <button class="delete-slot p-1 text-gray-500 hover:text-red-500 transition-colors" title="Eliminar rutina completa">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18m-2 0v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6m3 0V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+            </button>
+        </div>
+    </div>
+    
+    <div class="exercises-list flex-grow">
+        {exercises.length === 0 && (
+            <p class="text-gray-600 text-sm italic py-4 text-center empty-msg">No hay ejercicios aún.</p>
+        )}
+        {exercises.map(exercise => (
+            <ExerciseItem exercise={exercise} dayIndex={index} />
+        ))}
+    </div>
+
+    <button 
+        class="add-exercise mt-4 w-full py-2 border-2 border-dashed border-white/5 rounded-lg text-gray-500 hover:border-primary/30 hover:text-primary transition-all duration-300 flex items-center justify-center gap-2 group"
+    >
+        <span class="text-xl group-hover:scale-125 transition-transform">+</span>
+        <span class="text-sm font-medium">Agregar ejercicio</span>
+    </button>
+</div>

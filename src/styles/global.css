@@ -1,0 +1,46 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #8b5cf6;
+  --color-primary-dark: #7c3aed;
+  --color-bg: #0f0f13;
+  --color-card: #1a1a24;
+}
+
+@layer base {
+  body {
+    @apply bg-bg text-gray-100 font-sans min-h-screen selection:bg-primary/30;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded-lg transition-all duration-200 shadow-lg shadow-primary/20 active:scale-95;
+  }
+  
+  .card {
+    @apply bg-card border border-white/5 rounded-xl p-4 sm:p-5 shadow-xl transition-all duration-300 hover:border-white/10 overflow-hidden;
+  }
+
+  .input-ghost {
+    @apply bg-transparent border-none focus:ring-0 outline-none text-gray-100 placeholder-gray-500 w-full truncate;
+  }
+
+  .checkbox-custom {
+    @apply w-7 h-7 sm:w-6 sm:h-6 rounded border-2 border-gray-600 appearance-none cursor-pointer transition-all duration-200 checked:bg-green-500 checked:border-green-500 relative;
+  }
+
+  .checkbox-custom:checked::after {
+    content: '✓';
+    @apply absolute inset-0 flex items-center justify-center text-white text-sm font-bold;
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.4s ease-out forwards;
+}

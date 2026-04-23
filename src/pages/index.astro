@@ -1,0 +1,59 @@
+---
+import MainLayout from '../layouts/MainLayout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import RoutineSlot from '../components/RoutineSlot.astro';
+import Modal from '../components/Modal.astro';
+import { getInitialData } from '../scripts/store.js';
+
+// Get initial days structure (Lunes-Domingo)
+const days = getInitialData();
+---
+
+<MainLayout>
+	<div class="min-h-screen flex flex-col">
+		<Header />
+		
+		<main class="flex-grow px-4 max-w-7xl mx-auto w-full pb-12">
+			<div id="routines-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+				{days.map((routine, index) => (
+					<RoutineSlot 
+						routineId={routine.id}
+						name={routine.name} 
+						index={index} 
+						exercises={[]} 
+					/>
+				))}
+			</div>
+		</main>
+
+		<Footer />
+	</div>
+
+	<Modal />
+	<script src="../scripts/routines.js"></script>
+</MainLayout>
+
+<style>
+	/* Background blobs for aesthetic */
+	body::before {
+		content: "";
+		position: fixed;
+		top: -10%;
+		left: -10%;
+		width: 40%;
+		height: 40%;
+		background: radial-gradient(circle, rgba(139, 92, 246, 0.05) 0%, transparent 70%);
+		z-index: -1;
+	}
+	body::after {
+		content: "";
+		position: fixed;
+		bottom: -10%;
+		right: -10%;
+		width: 50%;
+		height: 50%;
+		background: radial-gradient(circle, rgba(99, 102, 241, 0.05) 0%, transparent 70%);
+		z-index: -1;
+	}
+</style>
