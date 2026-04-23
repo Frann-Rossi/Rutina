@@ -45,10 +45,17 @@ document.addEventListener('DOMContentLoaded', () => {
         return { routineIndex, exerciseId, slot, exerciseItem };
     };
 
-    const updateState = (action) => {
+    const updateState = (action, scope = 'all', details = {}) => {
         action();
         saveRoutines(routines);
-        renderAll();
+        
+        if (scope === 'all') {
+            renderAll();
+        } else if (scope === 'slot') {
+            renderSlot(details.routineIndex);
+        } else if (scope === 'exercise') {
+            updateExerciseUI(details.routineIndex, details.exerciseId);
+        }
     };
 
     const findExercise = (routineIndex, exerciseId) => 
@@ -56,9 +63,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Actions ---
     const actions = {
-        addSlot: () => updateState(() => {
-            routines.push({ id: generateId(), name: `Nueva Rutina ${routines.length + 1}`, exercises: [] });
-        }),
+        addSlot: () => {
+            const newRoutine = { id: generateId(), name: `Nueva Rutina ${routines.length + 1}`, exercises: [] };
+            routines.push(newRoutine);
+            saveRoutines(routines);
+            
+            // Si es la primera rutina, renderizamos todo para quitar el mensaje de "vacío"
+            if (routines.length === 1) {
+                renderAll();
+            } else {
+                // Si no, simplemente añadimos la nueva tarjeta al final
+                const index = routines.length - 1;
+                const temp = document.createElement('div');
+                temp.innerHTML = createRoutineHTML(newRoutine, index, true);
+                dom.container.appendChild(temp.firstElementChild);
+            }
+        },
         resetAll: () => showModal('¿Borrar todo?', 'Esta acción eliminará todas tus rutinas permanentemente.', () => {
             routines = resetRoutines();
             renderAll();
@@ -68,13 +88,13 @@ document.addEventListener('DOMContentLoaded', () => {
         }),
         addExercise: (idx) => updateState(() => {
             routines[idx].exercises.push({ id: generateId(), name: '', series: [false, false, false] });
-        }),
+        }, 'slot', { routineIndex: idx }),
         removeExercise: (rIdx, eId) => updateState(() => {
             routines[rIdx].exercises = routines[rIdx].exercises.filter(ex => ex.id !== eId);
-        }),
+        }, 'slot', { routineIndex: rIdx }),
         resetDay: (idx) => updateState(() => {
             routines[idx].exercises.forEach(ex => ex.series = ex.series.map(() => false));
-        }),
+        }, 'slot', { routineIndex: idx }),
         updateSerie: (rIdx, eId, sIdx, type) => updateState(() => {
             const ex = findExercise(rIdx, eId);
             if (!ex) return;
@@ -82,7 +102,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (type === 'add') ex.series.push(false);
             if (type === 'remove' && ex.series.length > 0) ex.series.pop();
             if (type === 'reset') ex.series = ex.series.map(() => false);
-        })
+        }, (type === 'toggle' || type === 'reset' || type === 'add' || type === 'remove') ? 'exercise' : 'slot', { routineIndex: rIdx, exerciseId: eId })
     };
 
     // --- Event Listeners ---
@@ -137,11 +157,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     </button>
                 </div>
                 <div class="flex flex-wrap items-center gap-2 mt-2 series-container" data-exercise-id="${ex.id}">
-                    ${ex.series.map((s, i) => `
-                        <label class="relative cursor-pointer group">
-                            <input type="checkbox" ${s ? 'checked' : ''} class="checkbox-custom serie-checkbox" data-index="${i}" />
-                        </label>
-                    `).join('')}
+                    <div class="series-list flex flex-wrap gap-2">
+                        ${ex.series.map((s, i) => `
+                            <label class="relative cursor-pointer group">
+                                <input type="checkbox" ${s ? 'checked' : ''} class="checkbox-custom serie-checkbox" data-index="${i}" />
+                            </label>
+                        `).join('')}
+                    </div>
                     <div class="flex gap-2 ml-2 shrink-0">
                         <button class="add-serie text-gray-500 hover:text-violet-400 transition-colors text-2xl font-bold p-1">+</button>
                         <button class="remove-serie text-gray-500 hover:text-red-400 transition-colors text-2xl font-bold p-1">-</button>
@@ -149,19 +171,14 @@ document.addEventListener('DOMContentLoaded', () => {
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
                         </button>
                     </div>
-                    <span class="text-xs text-gray-500 ml-auto font-medium">${completed}/${ex.series.length}</span>
+                    <span class="text-xs text-gray-500 ml-auto font-medium completion-counter">${completed}/${ex.series.length}</span>
                 </div>
             </div>`;
     };
 
-    const renderAll = () => {
-        if (!dom.container) return;
-        if (routines.length === 0) {
-            dom.container.innerHTML = '<div class="col-span-full py-20 text-center text-gray-500 text-xl">No tienes rutinas. Haz clic en "Agregar Rutina".</div>';
-            return;
-        }
-        dom.container.innerHTML = routines.map((r, i) => `
-            <div class="card animate-fade-in flex flex-col gap-2 h-full routine-slot" data-id="${r.id}" data-index="${i}">
+    const createRoutineHTML = (r, i, isNew = false) => {
+        return `
+            <div class="card ${isNew ? 'animate-fade-in' : ''} flex flex-col gap-2 h-full routine-slot" data-id="${r.id}" data-index="${i}">
                 <div class="flex justify-between items-center mb-4 gap-2">
                     <input type="text" value="${r.name}" placeholder="Nombre..." class="input-ghost text-xl font-bold text-gray-200 routine-name-input" />
                     <div class="flex gap-2 shrink-0">
@@ -179,7 +196,53 @@ document.addEventListener('DOMContentLoaded', () => {
                 <button class="add-exercise mt-4 w-full py-2 border-2 border-dashed border-white/5 rounded-lg text-gray-500 hover:text-primary flex items-center justify-center gap-2 transition-all">
                     <span class="text-xl">+</span><span class="text-sm font-medium">Agregar ejercicio</span>
                 </button>
-            </div>`).join('');
+            </div>`;
+    };
+
+    const updateExerciseUI = (rIdx, eId) => {
+        const ex = findExercise(rIdx, eId);
+        if (!ex) return;
+        const exerciseEl = dom.container.querySelector(`.exercise-item[data-id="${eId}"]`);
+        if (!exerciseEl) return;
+
+        // Actualizar lista de series (checkboxes)
+        const seriesList = exerciseEl.querySelector('.series-list');
+        if (seriesList) {
+            seriesList.innerHTML = ex.series.map((s, i) => `
+                <label class="relative cursor-pointer group">
+                    <input type="checkbox" ${s ? 'checked' : ''} class="checkbox-custom serie-checkbox" data-index="${i}" />
+                </label>
+            `).join('');
+        }
+
+        // Actualizar contador
+        const completed = ex.series.filter(s => s).length;
+        const counter = exerciseEl.querySelector('.completion-counter');
+        if (counter) counter.textContent = `${completed}/${ex.series.length}`;
+    };
+
+    const renderSlot = (idx) => {
+        const routine = routines[idx];
+        if (!routine) return;
+        const slotEl = dom.container.querySelector(`.routine-slot[data-index="${idx}"]`);
+        if (slotEl) {
+            // Reemplazar contenido sin perder el nodo padre para evitar saltos bruscos si es posible,
+            // pero lo más seguro es reemplazar el HTML interno o el elemento entero.
+            // Reemplazamos el outerHTML para asegurar que todo se actualice correctamente.
+            const newHTML = createRoutineHTML(routine, idx, false);
+            const temp = document.createElement('div');
+            temp.innerHTML = newHTML;
+            slotEl.replaceWith(temp.firstElementChild);
+        }
+    };
+
+    const renderAll = () => {
+        if (!dom.container) return;
+        if (routines.length === 0) {
+            dom.container.innerHTML = '<div class="col-span-full py-20 text-center text-gray-500 text-xl">No tienes rutinas. Haz clic en "Agregar Rutina".</div>';
+            return;
+        }
+        dom.container.innerHTML = routines.map((r, i) => createRoutineHTML(r, i, false)).join('');
     };
 
     setupEventListeners();
